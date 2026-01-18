@@ -11,15 +11,16 @@ API_ID = 37197223
 API_HASH = "3a43ae287a696ee9a6a82fb79f605b75"
 BOT_TOKEN = "8336671886:AAGrAv4g0CEc4X8kO1CFv7R8hucIMck60ac"
 
-# NEW DATABASE CHANNEL ID
+# Database Channel ID
 DB_CHANNEL_ID = -1003336472608 
 
 AUTO_DELETE = 1800 # 30 Minutes
 
-# --- ADMINS ---
+# ADMINS
 ADMINS = [5029489287, 5893066075, 7426624114] 
 
 # --- 4 CHANNELS FOR FORCE SUB ---
+# Ensure the Bot is an Admin in all of these
 FSUB_CHANNELS = [-1003691111238, -1001234567890, -1003574535419, -1003631779895] 
 LINKS = [
     "https://t.me/+mr5SZGOlW0U4YmQ1", 
@@ -45,7 +46,8 @@ async def check_fsub(client, message):
             await client.get_chat_member(ch, message.from_user.id)
         except UserNotParticipant:
             return False
-        except Exception:
+        except Exception as e:
+            print(f"Error checking channel {ch}: {e}")
             pass 
     return True
 
@@ -53,22 +55,24 @@ async def check_fsub(client, message):
 async def start(client, message):
     user_id = message.from_user.id
     
-    # CASE 1: User clicked a file link (?start=msg_id)
+    # CASE 1: User wants a file
     if len(message.command) > 1:
+        # Check Force Sub ONLY for Non-Admins
         if user_id not in ADMINS:
             is_joined = await check_fsub(client, message)
             if not is_joined:
+                # 4 Channel Buttons + Try Again
                 buttons = [
                     [InlineKeyboardButton("Join Channel 1", url=LINKS[0]), InlineKeyboardButton("Join Channel 2", url=LINKS[1])],
                     [InlineKeyboardButton("Join Channel 3", url=LINKS[2]), InlineKeyboardButton("Join Channel 4", url=LINKS[3])],
                     [InlineKeyboardButton("♻️ Try Again", url=f"https://t.me/{(await client.get_me()).username}?start={message.command[1]}")]
                 ]
                 return await message.reply_text(
-                    f"Hey {message.from_user.mention}!\n\n**To access this file, you must join all 4 channels below!**",
+                    f"Hey {message.from_user.mention}!\n\n**To get the file, you must join all 4 channels below!**",
                     reply_markup=InlineKeyboardMarkup(buttons)
                 )
 
-        # Send the file
+        # REACHED HERE: Send file to Admin or Joined User
         try:
             msg_id = int(message.command[1])
             sent_msg = await client.copy_message(message.chat.id, DB_CHANNEL_ID, msg_id)
@@ -77,28 +81,25 @@ async def start(client, message):
             await sent_msg.delete()
             await del_msg.edit("🛑 **File Deleted!**")
         except:
-            await message.reply_text("❌ Link expired or Bot is not Admin in the new Database!")
+            await message.reply_text("❌ Link invalid or file deleted from database.")
             
-    # CASE 2: Normal start (Direct message) - FIXED TO PREVENT DUPLICATE
+    # CASE 2: Normal start message
     else:
-        welcome_text = "👋 **Welcome to Tempest Anime Provider**\n\nI am online! Send me a file (Video/Document/Photo) to generate a link."
+        welcome_text = "👋 **Welcome to Tempest Anime Provider**\n\nI am online! Admins can send files to generate links."
         btns = InlineKeyboardMarkup([[InlineKeyboardButton("📢 Updates", url=LINKS[0])]])
         await message.reply_photo(photo=START_PIC, caption=welcome_text, reply_markup=btns)
 
-# Admin Only: Store files (Photo, Video, Document)
+# Admin Only storage
 @bot.on_message(filters.private & (filters.document | filters.video | filters.photo))
 async def store_file(client, message):
     if message.from_user.id not in ADMINS:
         return 
-    
     try:
-        # Forward file to the UPDATED Database Channel
         msg = await message.forward(DB_CHANNEL_ID)
-        bot_username = (await client.get_me()).username
-        link = f"https://t.me/{bot_username}?start={msg.id}"
-        await message.reply_text(f"✅ **File Stored in New Database!**\n\n**Link:** `{link}`")
-    except Exception as e:
-        await message.reply_text("❌ Error: Bot must be Admin in Database channel `-1003336472608`!")
+        link = f"https://t.me/{(await client.get_me()).username}?start={msg.id}"
+        await message.reply_text(f"✅ **Link Generated:**\n\n`{link}`")
+    except:
+        await message.reply_text("❌ Error: Ensure Bot is Admin in DB Channel!")
 
 if __name__ == "__main__":
     Thread(target=run).start()
