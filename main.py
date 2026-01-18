@@ -14,8 +14,8 @@ DB_CHANNEL_ID = -1003336472608
 
 ADMINS = [5029489287, 5893066075, 7426624114] 
 
-# --- 4 CHANNELS (As per your sequence) ---
-FSUB_CHANNELS = [-10036412676601, -1003640815072, -1003631779895, -1003574535419] 
+# --- UPDATED 4 CHANNELS (Fixed 10-digit ID) ---
+FSUB_CHANNELS = [-1003641267601, -1003640815072, -1003631779895, -1003574535419] 
 LINKS = [
     "https://t.me/+mr5SZGOlW0U4YmQ1", 
     "https://t.me/+zIPvYrqHaZU4YTdl",
@@ -33,17 +33,21 @@ def run(): app.run(host="0.0.0.0", port=8080)
 
 bot = Client("TempestBot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
 
+# --- DEBUGGING MEMBERSHIP CHECK ---
 async def check_fsub(client, message):
+    user_id = message.from_user.id
     for ch in FSUB_CHANNELS:
         try:
-            member = await client.get_chat_member(ch, message.from_user.id)
+            member = await client.get_chat_member(ch, user_id)
             if member.status in ["kicked", "left"]:
+                print(f"DEBUG: User {user_id} is {member.status} in {ch}")
                 return False
+            print(f"DEBUG: User {user_id} is JOINED in {ch}")
         except UserNotParticipant:
+            print(f"DEBUG: User {user_id} NOT PARTICIPANT in {ch}")
             return False
         except Exception as e:
-            # Agar bot admin nahi hai toh "Peer id invalid" error yahan print hoga
-            print(f"Error checking channel {ch}: {e}")
+            print(f"DEBUG: Error checking {ch}: {e}")
             return False 
     return True
 
@@ -67,29 +71,15 @@ async def start(client, message):
 
         try:
             msg_id = int(message.command[1])
-            sent_msg = await client.copy_message(message.chat.id, DB_CHANNEL_ID, msg_id)
-            del_msg = await message.reply_text("✅ **File Sent!** Deleting in 30 mins.")
-            await asyncio.sleep(1800)
-            await sent_msg.delete()
-            await del_msg.edit("🛑 **File Deleted!**")
+            await client.copy_message(message.chat.id, DB_CHANNEL_ID, msg_id)
+            await message.reply_text("✅ **File Bhej Di Hai!**")
         except:
-            await message.reply_text("❌ Error: Bot must be Admin in Database Channel!")
+            await message.reply_text("❌ Error: Bot ko DB Channel mein Admin banayein.")
             
     else:
-        welcome_text = "👋 **Welcome to Tempest Anime Provider**\n\nChannal join karne ke baad aapko aapki files mil jayegi."
+        welcome_text = "👋 **Welcome to Tempest Anime Provider**"
         btns = InlineKeyboardMarkup([[InlineKeyboardButton("📢 Updates", url=LINKS[0])]])
         await message.reply_photo(photo=START_PIC, caption=welcome_text, reply_markup=btns)
-
-@bot.on_message(filters.private & (filters.document | filters.video | filters.photo))
-async def store_file(client, message):
-    if message.from_user.id not in ADMINS:
-        return 
-    try:
-        msg = await message.forward(DB_CHANNEL_ID)
-        link = f"https://t.me/{(await client.get_me()).username}?start={msg.id}"
-        await message.reply_text(f"✅ **Link Generated:**\n\n`{link}`")
-    except:
-        await message.reply_text("❌ Error: Bot must be Admin in DB Channel!")
 
 if __name__ == "__main__":
     Thread(target=run).start()
