@@ -14,10 +14,9 @@ DB_CHANNEL_ID = -1003336472608
 
 ADMINS = [5029489287, 5893066075, 7426624114] 
 
-# --- UPDATED 4 CHANNELS (Fixed 10-digit ID) ---
-FSUB_CHANNELS = [-1003641267601, -1003640815072, -1003574535419, -1003631779895] 
+# --- UPDATED: 3 CHANNELS ONLY (Channel 1 Removed) ---
+FSUB_CHANNELS = [-1003640815072, -1003574535419, -1003631779895] 
 LINKS = [
-    "https://t.me/+mr5SZGOlW0U4YmQ1", 
     "https://t.me/+zIPvYrqHaZU4YTdl",
     "https://t.me/+F9FiOh8EoHIxNjhl",
     "https://t.me/+PanUv9-TO8cyNzhl"
@@ -33,7 +32,6 @@ def run(): app.run(host="0.0.0.0", port=8080)
 
 bot = Client("TempestBot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
 
-# --- DEBUGGING MEMBERSHIP CHECK ---
 async def check_fsub(client, message):
     user_id = message.from_user.id
     for ch in FSUB_CHANNELS:
@@ -59,9 +57,10 @@ async def start(client, message):
         if user_id not in ADMINS:
             is_joined = await check_fsub(client, message)
             if not is_joined:
+                # Buttons updated for 3 channels
                 buttons = [
                     [InlineKeyboardButton("Join Channel 1", url=LINKS[0]), InlineKeyboardButton("Join Channel 2", url=LINKS[1])],
-                    [InlineKeyboardButton("Join Channel 3", url=LINKS[2]), InlineKeyboardButton("Join Channel 4", url=LINKS[3])],
+                    [InlineKeyboardButton("Join Channel 3", url=LINKS[2])],
                     [InlineKeyboardButton("♻️ Try Again", url=f"https://t.me/{(await client.get_me()).username}?start={message.command[1]}")]
                 ]
                 return await message.reply_text(
