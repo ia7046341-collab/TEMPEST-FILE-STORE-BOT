@@ -10,9 +10,9 @@ from threading import Thread
 API_ID = 37197223
 API_HASH = "3a43ae287a696ee9a6a82fb79f605b75"
 BOT_TOKEN = "8336671886:AAGrAv4g0CEc4X8kO1CFv7R8hucIMck60ac"
-DB_CHANNEL_ID = -1003641267601 
+DB_CHANNEL_ID = -1003336472608 
 FORCE_SUB = -1003691111238
-AUTO_DELETE = 600
+AUTO_DELETE = 1800
 
 # Aapka naya photo aur links
 START_PIC = "https://graph.org/file/528ff7a62d3c63dc4d030-21c629267007f575ec.jpg" 
@@ -47,7 +47,7 @@ async def start(client, message):
         except:
             await message.reply_text("❌ Invalid link ya file delete ho gayi hai.")
     else:
-        welcome_text = "👋 **Welcome to Tempest Anime Provider**\n\nMain aapki anime files ko store karke links bana sakta hoon. Mujhe koi bhi file bhejein!"
+        welcome_text = "👋 **Welcome to Tempest Anime Provider**\n\nMain aapki anime files channal join jarne pe mil jayegi"
         buttons = InlineKeyboardMarkup([
             [InlineKeyboardButton("📢 Update", url=UPDATE_LINK),
              InlineKeyboardButton("🛠️ Support", url=SUPPORT_LINK)]
