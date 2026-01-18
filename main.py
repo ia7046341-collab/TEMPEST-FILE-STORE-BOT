@@ -10,15 +10,14 @@ from threading import Thread
 API_ID = 37197223
 API_HASH = "3a43ae287a696ee9a6a82fb79f605b75"
 BOT_TOKEN = "8336671886:AAGrAv4g0CEc4X8kO1CFv7R8hucIMck60ac"
-DB_CHANNEL_ID = -1003336472608
-AUTO_DELETE = 1800 
+DB_CHANNEL_ID = -10033641267601 
+AUTO_DELETE = 1800 # 30 Minutes
 
-# --- ADMINS (Owner & Co-Owner) ---
-ADMINS = [7426624114, 5029489287, 5893066075] 
+# --- ADMINS ---
+ADMINS = [5029489287, 5893066075] 
 
 # --- 4 CHANNELS FOR FORCE SUB ---
 FSUB_CHANNELS = [-1003691111238, -1001234567890, -1003574535419, -1003631779895] 
-
 LINKS = [
     "https://t.me/+mr5SZGOlW0U4YmQ1", 
     "https://t.me/+zIPvYrqHaZU4YTdl",
@@ -30,13 +29,13 @@ START_PIC = "https://graph.org/file/528ff7a62d3c63dc4d030-21c629267007f575ec.jpg
 
 app = Flask(__name__)
 @app.route('/')
-def home(): return "Bot is Online"
+def home(): return "Bot is Running"
 
 def run(): app.run(host="0.0.0.0", port=8080)
 
 bot = Client("TempestBot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
 
-# Function to check membership
+# Membership Check Function
 async def check_fsub(client, message):
     for ch in FSUB_CHANNELS:
         try:
@@ -51,52 +50,52 @@ async def check_fsub(client, message):
 async def start(client, message):
     user_id = message.from_user.id
     
-    # 1. Check Subscription
-    if user_id not in ADMINS:
-        is_joined = await check_fsub(client, message)
-        if not is_joined:
-            buttons = [
-                [InlineKeyboardButton("Join Channel 1", url=LINKS[0]), InlineKeyboardButton("Join Channel 2", url=LINKS[1])],
-                [InlineKeyboardButton("Join Channel 3", url=LINKS[2]), InlineKeyboardButton("Join Channel 4", url=LINKS[3])]
-            ]
-            if len(message.command) > 1:
-                try_url = f"https://t.me/{(await client.get_me()).username}?start={message.command[1]}"
-                buttons.append([InlineKeyboardButton("♻️ Try Again", url=try_url)])
-            
-            return await message.reply_text(
-                f"Hey {message.from_user.mention}!\n\n**To use this bot, you must join all 4 channels below!**",
-                reply_markup=InlineKeyboardMarkup(buttons)
-            )
-
-    # 2. File Resend Logic
+    # Check if user clicked a file link
     if len(message.command) > 1:
+        if user_id not in ADMINS:
+            is_joined = await check_fsub(client, message)
+            if not is_joined:
+                # 4 Channel Buttons + Try Again
+                buttons = [
+                    [InlineKeyboardButton("Join Channel 1", url=LINKS[0]), InlineKeyboardButton("Join Channel 2", url=LINKS[1])],
+                    [InlineKeyboardButton("Join Channel 3", url=LINKS[2]), InlineKeyboardButton("Join Channel 4", url=LINKS[3])],
+                    [InlineKeyboardButton("♻️ Try Again", url=f"https://t.me/{(await client.get_me()).username}?start={message.command[1]}")]
+                ]
+                return await message.reply_text(
+                    f"Hey {message.from_user.mention}!\n\n**To access this file, you must join all 4 channels below!**",
+                    reply_markup=InlineKeyboardMarkup(buttons)
+                )
+
+        # File Delivery Logic
         try:
             msg_id = int(message.command[1])
             sent_msg = await client.copy_message(message.chat.id, DB_CHANNEL_ID, msg_id)
-            del_msg = await message.reply_text("✅ **File Sent!**\n\nThis will be deleted in 30 minutes.")
+            del_msg = await message.reply_text("✅ **File Sent!**\n\nThis will be deleted in 30 minutes for security.")
             await asyncio.sleep(AUTO_DELETE)
             await sent_msg.delete()
             await del_msg.edit("🛑 **File Deleted!**")
-        except Exception:
-            await message.reply_text("❌ Link invalid or expired.")
+        except:
+            await message.reply_text("❌ This link is invalid or has expired.")
+            
     else:
-        welcome_text = "👋 **Welcome to Tempest Anime Provider**\n\nAdmin Panel Active. You can now store files."
-        btns = InlineKeyboardMarkup([[InlineKeyboardButton("📢 Updates", url=LINKS[0])]])
+        # Simple welcome for direct start (No Force Sub buttons)
+        welcome_text = "👋 **Welcome to Tempest Anime Provider**\n\nI am online and ready! Send me a file to generate a link."
+        btns = InlineKeyboardMarkup([[InlineKeyboardButton("📢 Main Channel", url=LINKS[0])]])
         await message.reply_photo(photo=START_PIC, caption=welcome_text, reply_markup=btns)
 
 @bot.on_message(filters.private & (filters.document | filters.video | filters.photo))
 async def store_file(client, message):
     if message.from_user.id not in ADMINS:
-        return await message.reply_text("❌ Only Admins can store files.")
-    
+        return 
     try:
         msg = await message.forward(DB_CHANNEL_ID)
-        bot_username = (await client.get_me()).username
-        link = f"https://t.me/{bot_username}?start={msg.id}"
+        link = f"https://t.me/{(await client.get_me()).username}?start={msg.id}"
         await message.reply_text(f"✅ **Link Generated:**\n\n`{link}`")
-    except Exception:
-        await message.reply_text("❌ Error: Bot must be Admin in Database Channel!")
+    except:
+        await message.reply_text("❌ Error: Make sure Bot is Admin in DB Channel!")
 
 if __name__ == "__main__":
     Thread(target=run).start()
     bot.run()
+
+
