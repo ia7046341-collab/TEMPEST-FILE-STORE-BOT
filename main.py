@@ -12,7 +12,7 @@ API_HASH = "3a43ae287a696ee9a6a82fb79f605b75"
 BOT_TOKEN = "8336671886:AAGrAv4g0CEc4X8kO1CFv7R8hucIMck60ac"
 DB_CHANNEL_ID = -1003336472608 
 
-# ADMINS - In IDs ko buttons nahi dikhenge
+# ADMINS - Inhe membership check nahi dikhega
 ADMINS = [5029489287, 5893066075, 7426624114] 
 
 # --- 4 CHANNELS ---
@@ -41,8 +41,7 @@ async def check_fsub(client, message):
             await client.get_chat_member(ch, message.from_user.id)
         except UserNotParticipant:
             return False
-        except Exception as e:
-            print(f"Error checking {ch}: {e}")
+        except Exception:
             return False 
     return True
 
@@ -50,23 +49,23 @@ async def check_fsub(client, message):
 async def start(client, message):
     user_id = message.from_user.id
     
-    # Situation 1: User came from a File Link
+    # CASE 1: File Link se aane par
     if len(message.command) > 1:
         if user_id not in ADMINS:
             is_joined = await check_fsub(client, message)
             if not is_joined:
-                # 4 Channel Buttons + Try Again
+                # 4 Buttons + Try Again
                 buttons = [
                     [InlineKeyboardButton("Join Channel 1", url=LINKS[0]), InlineKeyboardButton("Join Channel 2", url=LINKS[1])],
                     [InlineKeyboardButton("Join Channel 3", url=LINKS[2]), InlineKeyboardButton("Join Channel 4", url=LINKS[3])],
                     [InlineKeyboardButton("♻️ Try Again", url=f"https://t.me/{(await client.get_me()).username}?start={message.command[1]}")]
                 ]
                 return await message.reply_text(
-                    f"Hey {message.from_user.mention}!\n\n**Join our 4 channels to access the file!**",
+                    f"Hey {message.from_user.mention}!\n\n**Channal join karne ke baad aapko aapki files mil jayegi!**",
                     reply_markup=InlineKeyboardMarkup(buttons)
                 )
 
-        # File Delivery (Only for Joined Users or Admins)
+        # File Delivery
         try:
             msg_id = int(message.command[1])
             sent_msg = await client.copy_message(message.chat.id, DB_CHANNEL_ID, msg_id)
@@ -75,11 +74,11 @@ async def start(client, message):
             await sent_msg.delete()
             await del_msg.edit("🛑 **File Deleted!**")
         except:
-            await message.reply_text("❌ Link invalid or Bot is not Admin in Database!")
+            await message.reply_text("❌ Link invalid or file deleted from database.")
             
-    # Situation 2: Normal Start (Single Welcome Message)
+    # CASE 2: Normal Welcome Message
     else:
-        welcome_text = "👋 **Welcome to Tempest Anime Provider**\n\nI am online! Send me a file to generate a link."
+        welcome_text = "👋 **Welcome to Tempest Anime Provider**\n\nChannal join karne ke baad aapko aapki files mil jayegi."
         btns = InlineKeyboardMarkup([[InlineKeyboardButton("📢 Updates", url=LINKS[0])]])
         await message.reply_photo(photo=START_PIC, caption=welcome_text, reply_markup=btns)
 
@@ -93,7 +92,7 @@ async def store_file(client, message):
         link = f"https://t.me/{(await client.get_me()).username}?start={msg.id}"
         await message.reply_text(f"✅ **Link Generated:**\n\n`{link}`")
     except:
-        await message.reply_text("❌ Error: Bot must be Admin in DB Channel!")
+        await message.reply_text("❌ Error: Make sure Bot is Admin in DB Channel!")
 
 if __name__ == "__main__":
     Thread(target=run).start()
