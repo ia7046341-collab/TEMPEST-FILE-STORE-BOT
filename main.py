@@ -33,14 +33,17 @@ def run(): app.run(host="0.0.0.0", port=8080)
 
 bot = Client("TempestBot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
 
-# Membership Check Function
+# --- UPDATED MEMBERSHIP CHECK FUNCTION ---
 async def check_fsub(client, message):
     for ch in FSUB_CHANNELS:
         try:
-            await client.get_chat_member(ch, message.from_user.id)
+            member = await client.get_chat_member(ch, message.from_user.id)
+            if member.status in ["kicked", "left"]:
+                return False
         except UserNotParticipant:
             return False
-        except Exception:
+        except Exception as e:
+            print(f"Error checking {ch}: {e}")
             return False 
     return True
 
@@ -62,20 +65,15 @@ async def start(client, message):
                     reply_markup=InlineKeyboardMarkup(buttons)
                 )
 
-        # File Delivery Logic
         try:
             msg_id = int(message.command[1])
-            sent_msg = await client.copy_message(
-                chat_id=message.chat.id,
-                from_chat_id=DB_CHANNEL_ID,
-                message_id=msg_id
-            )
-            del_msg = await message.reply_text("✅ **File Bhej Di Hai!**\n\nYe 30 min mein delete ho jayegi.")
+            sent_msg = await client.copy_message(message.chat.id, DB_CHANNEL_ID, msg_id)
+            del_msg = await message.reply_text("✅ **File Sent!** Deleting in 30 mins.")
             await asyncio.sleep(1800)
             await sent_msg.delete()
             await del_msg.edit("🛑 **File Deleted!**")
-        except Exception as e:
-            await message.reply_text("❌ Error: File nahi mil rahi. Check karein ki Bot DB Channel mein Admin hai.")
+        except:
+            await message.reply_text("❌ Error: File nahi mil rahi. Bot ko DB mein Admin banayein.")
             
     else:
         welcome_text = "👋 **Welcome to Tempest Anime Provider**\n\nChannal join karne ke baad aapko aapki files mil jayegi."
@@ -89,7 +87,7 @@ async def store_file(client, message):
     try:
         msg = await message.forward(DB_CHANNEL_ID)
         link = f"https://t.me/{(await client.get_me()).username}?start={msg.id}"
-        await message.reply_text(f"✅ **Link Taiyar Hai:**\n\n`{link}`")
+        await message.reply_text(f"✅ **Link Generated:**\n\n`{link}`")
     except:
         await message.reply_text("❌ Error: Bot ko DB Channel mein Admin banayein!")
 
