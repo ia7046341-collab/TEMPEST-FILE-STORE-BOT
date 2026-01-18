@@ -17,10 +17,8 @@ ADMINS = [5029489287, 5893066075, 7426624114]
 # --- CHANNELS SEQUENCE ---
 CH1_ID = -1003640815072
 CH1_LINK = "https://t.me/+zIPvYrqHaZUMYTdl"
-
 CH2_ID = -1003631779895
 CH2_LINK = "https://t.me/+F9FiOh8EoHIxNjhl"
-
 CH3_ID = -1003574535419
 CH3_LINK = "https://t.me/+PanUv9-TO8cyNzhl"
 
@@ -71,8 +69,17 @@ async def start(client, message):
 
         try:
             msg_id = int(message.command[1])
-            await client.copy_message(message.chat.id, DB_CHANNEL_ID, msg_id)
-        except:
+            # File bhejna
+            file_msg = await client.copy_message(message.chat.id, DB_CHANNEL_ID, msg_id)
+            
+            # --- AUTO DELETE FEATURE ---
+            warning_msg = await message.reply_text("⚠️ Ye file **10 minute** mein delete ho jayegi. Kripya ise save ya forward kar lein.")
+            await asyncio.sleep(600) # 10 minute ka wait
+            await file_msg.delete()
+            await warning_msg.edit_text("🗑️ File auto-delete ho chuki hai.")
+            
+        except Exception as e:
+            print(f"Error: {e}")
             await message.reply_text("❌ Error: Bot ko DB Channel mein Admin banayein.")
             
     else:
@@ -80,7 +87,7 @@ async def start(client, message):
         btns = InlineKeyboardMarkup([[InlineKeyboardButton("📢 Updates", url=LINKS[0])]])
         await message.reply_photo(photo=START_PIC, caption=welcome_text, reply_markup=btns)
 
-# --- MEDIA HANDLER (Save Feature with Fixed Line 94) ---
+# --- MEDIA HANDLER (Save Feature) ---
 @bot.on_message(filters.private & (filters.document | filters.video | filters.audio))
 async def save_media(client, message):
     if message.from_user.id not in ADMINS:
@@ -90,7 +97,6 @@ async def save_media(client, message):
     bot_username = (await client.get_me()).username
     file_link = f"https://t.me/{bot_username}?start={sent_msg.id}"
     
-    # Corrected syntax here
     await message.reply_text(
         f"✅ **File Saved!**\n\n🔗 **Link:** `{file_link}`",
         quote=True
@@ -99,4 +105,3 @@ async def save_media(client, message):
 if __name__ == "__main__":
     Thread(target=run).start()
     bot.run()
-
