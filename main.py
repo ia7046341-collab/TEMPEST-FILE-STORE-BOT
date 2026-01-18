@@ -12,11 +12,10 @@ API_HASH = "3a43ae287a696ee9a6a82fb79f605b75"
 BOT_TOKEN = "8336671886:AAGrAv4g0CEc4X8kO1CFv7R8hucIMck60ac"
 DB_CHANNEL_ID = -1003336472608 
 
-# ADMINS - These IDs bypass the membership check
 ADMINS = [5029489287, 5893066075, 7426624114] 
 
-# --- 4 CHANNELS FOR FORCE SUB ---
-FSUB_CHANNELS = [-1003691111238, -1001234567890, -1003574535419, -1003631779895] 
+# --- 4 CHANNELS (As per your sequence) ---
+FSUB_CHANNELS = [-10036412676601, -1003640815072, -1003631779895, -1003574535419] 
 LINKS = [
     "https://t.me/+mr5SZGOlW0U4YmQ1", 
     "https://t.me/+zIPvYrqHaZU4YTdl",
@@ -34,7 +33,6 @@ def run(): app.run(host="0.0.0.0", port=8080)
 
 bot = Client("TempestBot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
 
-# Membership Check Function
 async def check_fsub(client, message):
     for ch in FSUB_CHANNELS:
         try:
@@ -44,7 +42,8 @@ async def check_fsub(client, message):
         except UserNotParticipant:
             return False
         except Exception as e:
-            print(f"Error checking {ch}: {e}")
+            # Agar bot admin nahi hai toh "Peer id invalid" error yahan print hoga
+            print(f"Error checking channel {ch}: {e}")
             return False 
     return True
 
@@ -52,23 +51,20 @@ async def check_fsub(client, message):
 async def start(client, message):
     user_id = message.from_user.id
     
-    # Case 1: User came from a File Link
     if len(message.command) > 1:
         if user_id not in ADMINS:
             is_joined = await check_fsub(client, message)
             if not is_joined:
-                # 4 Channel Buttons + Try Again
                 buttons = [
                     [InlineKeyboardButton("Join Channel 1", url=LINKS[0]), InlineKeyboardButton("Join Channel 2", url=LINKS[1])],
                     [InlineKeyboardButton("Join Channel 3", url=LINKS[2]), InlineKeyboardButton("Join Channel 4", url=LINKS[3])],
                     [InlineKeyboardButton("♻️ Try Again", url=f"https://t.me/{(await client.get_me()).username}?start={message.command[1]}")]
                 ]
                 return await message.reply_text(
-                    f"Hey {message.from_user.mention}!\n\n**Join our channels to get your files!**",
+                    f"Hey {message.from_user.mention}!\n\n**Channal join karne ke baad aapko aapki files mil jayegi!**",
                     reply_markup=InlineKeyboardMarkup(buttons)
                 )
 
-        # File Delivery Logic
         try:
             msg_id = int(message.command[1])
             sent_msg = await client.copy_message(message.chat.id, DB_CHANNEL_ID, msg_id)
@@ -77,15 +73,13 @@ async def start(client, message):
             await sent_msg.delete()
             await del_msg.edit("🛑 **File Deleted!**")
         except:
-            await message.reply_text("❌ Error: File not found or Bot not Admin in DB!")
+            await message.reply_text("❌ Error: Bot must be Admin in Database Channel!")
             
-    # Case 2: Normal Welcome Message
     else:
-        welcome_text = "👋 **Welcome to Tempest Anime Provider**\n\nAfter joining the channels, you will get your files."
+        welcome_text = "👋 **Welcome to Tempest Anime Provider**\n\nChannal join karne ke baad aapko aapki files mil jayegi."
         btns = InlineKeyboardMarkup([[InlineKeyboardButton("📢 Updates", url=LINKS[0])]])
         await message.reply_photo(photo=START_PIC, caption=welcome_text, reply_markup=btns)
 
-# Admin Only: Store files
 @bot.on_message(filters.private & (filters.document | filters.video | filters.photo))
 async def store_file(client, message):
     if message.from_user.id not in ADMINS:
@@ -95,7 +89,7 @@ async def store_file(client, message):
         link = f"https://t.me/{(await client.get_me()).username}?start={msg.id}"
         await message.reply_text(f"✅ **Link Generated:**\n\n`{link}`")
     except:
-        await message.reply_text("❌ Error: Ensure Bot is Admin in DB Channel!")
+        await message.reply_text("❌ Error: Bot must be Admin in DB Channel!")
 
 if __name__ == "__main__":
     Thread(target=run).start()
