@@ -14,11 +14,13 @@ DB_CHANNEL_ID = -1003336472608
 
 ADMINS = [5029489287, 5893066075, 7426624114] 
 
-# --- CHANNELS SEQUENCE ---
+# --- CHANNELS SEQUENCE (Updated with New Link) ---
 CH1_ID = -1003640815072
-CH1_LINK = "https://t.me/+zIPvYrqHaZUMYTdl"
+CH1_LINK = "https://t.me/+5_CSQdLwBGJhNTZl" # ✅ Nayi Link Fixed
+
 CH2_ID = -1003631779895
 CH2_LINK = "https://t.me/+F9FiOh8EoHIxNjhl"
+
 CH3_ID = -1003574535419
 CH3_LINK = "https://t.me/+PanUv9-TO8cyNzhl"
 
@@ -44,8 +46,7 @@ async def check_fsub(client, message):
                 return False
         except UserNotParticipant:
             return False
-        except Exception as e:
-            print(f"DEBUG Error: {ch} - {e}")
+        except Exception:
             return False 
     return True
 
@@ -57,30 +58,37 @@ async def start(client, message):
         if user_id not in ADMINS:
             is_joined = await check_fsub(client, message)
             if not is_joined:
+                # --- JOIN BUTTON BLOCK START ---
                 buttons = [
-                    [InlineKeyboardButton("Join Channel 1", url=LINKS[0]), InlineKeyboardButton("Join Channel 2", url=LINKS[1])],
-                    [InlineKeyboardButton("Join Channel 3", url=LINKS[2])],
-                    [InlineKeyboardButton("♻️ Try Again", url=f"https://t.me/{(await client.get_me()).username}?start={message.command[1]}")]
+                    [
+                        InlineKeyboardButton("Join Channel 1", url=LINKS[0]), 
+                        InlineKeyboardButton("Join Channel 2", url=LINKS[1])
+                    ],
+                    [
+                        InlineKeyboardButton("Join Channel 3", url=LINKS[2])
+                    ],
+                    [
+                        InlineKeyboardButton("♻️ Try Again", url=f"https://t.me/{(await client.get_me()).username}?start={message.command[1]}")
+                    ]
                 ]
                 return await message.reply_text(
-                    f"Hey {message.from_user.mention}!\n\n**Channels join karne ke baad hi file milegi!**",
+                    f"👋 **Hey {message.from_user.mention}!**\n\nFile download karne ke liye aapko hamare channels join karne honge. Niche diye gaye buttons par click karein aur join karne ke baad **Try Again** dabayein.",
                     reply_markup=InlineKeyboardMarkup(buttons)
                 )
+                # --- JOIN BUTTON BLOCK END ---
 
         try:
             msg_id = int(message.command[1])
-            # File bhejna
             file_msg = await client.copy_message(message.chat.id, DB_CHANNEL_ID, msg_id)
             
             # --- AUTO DELETE FEATURE ---
             warning_msg = await message.reply_text("⚠️ Ye file **10 minute** mein delete ho jayegi. Kripya ise save ya forward kar lein.")
-            await asyncio.sleep(600) # 10 minute ka wait
+            await asyncio.sleep(600) 
             await file_msg.delete()
             await warning_msg.edit_text("🗑️ File auto-delete ho chuki hai.")
             
-        except Exception as e:
-            print(f"Error: {e}")
-            await message.reply_text("❌ Error: Bot ko DB Channel mein Admin banayein.")
+        except Exception:
+            await message.reply_text("❌ Error: File nahi mili ya Bot DB Channel mein Admin nahi hai.")
             
     else:
         welcome_text = "👋 **Welcome to Tempest Anime Provider**"
@@ -88,11 +96,8 @@ async def start(client, message):
         await message.reply_photo(photo=START_PIC, caption=welcome_text, reply_markup=btns)
 
 # --- MEDIA HANDLER (Save Feature) ---
-@bot.on_message(filters.private & (filters.document | filters.video | filters.audio))
+@bot.on_message(filters.private & (filters.document | filters.video | filters.audio) & filters.user(ADMINS))
 async def save_media(client, message):
-    if message.from_user.id not in ADMINS:
-        return
-
     sent_msg = await message.forward(DB_CHANNEL_ID)
     bot_username = (await client.get_me()).username
     file_link = f"https://t.me/{bot_username}?start={sent_msg.id}"
