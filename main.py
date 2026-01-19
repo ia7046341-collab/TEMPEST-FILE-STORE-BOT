@@ -15,8 +15,8 @@ DB_CHANNEL_ID = -1003336472608
 ADMINS = [5029489287, 5893066075, 7426624114] 
 
 # --- CHANNELS SEQUENCE (Updated with New Link) ---
-CH1_ID = -1003640815072
-CH1_LINK = "https://t.me/+5_CSQdLwBGJhNTZl" # ✅ Nayi Link Fixed
+CH1_ID = -1003641267601
+CH1_LINK = "https://t.me/+mr5SZGOlW0U4YmQ1" # ✅ Nayi Link Fixed
 
 CH2_ID = -1003631779895
 CH2_LINK = "https://t.me/+F9FiOh8EoHIxNjhl"
