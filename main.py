@@ -93,7 +93,7 @@ async def start(client, message):
                     db_msg = await client.get_messages(DB_CHANNEL_ID, msg_id)
                     file_msg = await client.copy_message(message.chat.id, DB_CHANNEL_ID, msg_id, reply_markup=db_msg.reply_markup)
                     asyncio.create_task(auto_del(file_msg))
-                    if len(ids_to_send) > 1: await asyncio.sleep(1.5)
+                    if len(ids_to_send) > 1: await asyncio.sleep(0.7)
                 except: continue
 
             await message.reply_text("⚠️ **Files will be auto-deleted in 10 minutes.**")
